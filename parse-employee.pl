@@ -43,12 +43,13 @@ require 5;						# requires Perl version 5 or higher
 
 use strict;
 use warnings;
-use Data::Dumper qw(Dumper);
-
 use English;
 use File::Basename;
 use Getopt::Std;
 use vars qw($opt_f $opt_d $opt_h);
+use Data::Dumper qw(Dumper);
+
+use XML::Simple qw(:strict);
 
 
 
@@ -58,9 +59,9 @@ use vars qw($opt_f $opt_d $opt_h);
 ##
 
 my $USAGE =
-'usage: ' . basename($0) . ' -f<file> -p<project_list> [-d] [-h]
+'usage: ' . basename($0) . ' -f<file> [-d] [-h]
        <file>         ::= Data file (in xml-Format)
-       [-d]           Debug mode (no commands will be execute)
+       [-d]           Debug mode (prints more output)
        [-h]           Print this help.
 ';
 
@@ -96,7 +97,20 @@ sub checkCmdArgs();
 
 checkCmdArgs();
 
-print( "CommandLine Parameters are OK ... \n" );
+print( "[DEBUG] CommandLine Parameters are OK ... \n" )		if $DEBUG;
+print( "[DEBUG] opt_f: $opt_f \n")							if $DEBUG;
+
+my $file_name = $opt_f;
+die( "ERROR: XML-File \"$file_name\" don't exist. \n")		unless -e $file_name;
+
+my $xml_content = XMLin("$file_name",
+					KeyAttr => { server => 'name' },
+					ForceArray => [ 'server', 'address' ]
+				);
+print("[DEBUG] XML-Content:\n", Dumper($xml_content))		if $DEBUG;
+
+
+
 
 
 exit 0;
@@ -124,7 +138,7 @@ sub checkCmdArgs() {
   print( "$USAGE" ), exit(0)											if defined $opt_h;
 
   $DEBUG = $TRUE														if defined $opt_d;
-  print ("[DEBUG] CommandLine-Arguments:\n", Dumper \@_argv)			if defined $opt_d;
+  print("[DEBUG] CommandLine-Arguments:\n", Dumper \@_argv)				if defined $opt_d;
 
   die( "ERROR: Unknown argument(s): @ARGV \n", $USAGE )					if @ARGV;
 
